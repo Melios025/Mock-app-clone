@@ -330,21 +330,21 @@
 
     function fmt(n) { return n.toLocaleString('vi-VN') + 'đ'; }
 
-    function encodeCart(cart) {
-      try { return encodeURIComponent(btoa(unescape(encodeURIComponent(JSON.stringify(cart))))); }
-      catch (e) { return ''; }
+    // ----- Lưu giỏ hàng vào localStorage để dùng chung giữa các trang -----
+    const CART_KEY = 'bepnha_cart';
+
+    function loadCart() {
+      try {
+        const raw = localStorage.getItem(CART_KEY);
+        return raw ? (JSON.parse(raw) || {}) : {};
+      } catch (e) { return {}; }
     }
-    function decodeCart(str) {
-      try { return JSON.parse(decodeURIComponent(escape(atob(decodeURIComponent(str))))); }
-      catch (e) { return {}; }
+    function saveCart(cart) {
+      try { localStorage.setItem(CART_KEY, JSON.stringify(cart)); }
+      catch (e) { /* localStorage không khả dụng (vd: chế độ ẩn danh hết dung lượng) */ }
     }
 
-    // Đọc giỏ hàng hiện có từ URL (nếu quay lại từ trang thanh toán)
-    const params = new URLSearchParams(window.location.search);
-    let cart = {};
-    if (params.get('cart')) {
-      cart = decodeCart(params.get('cart')) || {};
-    }
+    let cart = loadCart();
 
     const listEl = document.getElementById('list');
 
@@ -386,6 +386,7 @@
       const cur = cart[id] || 0;
       const next = Math.max(0, cur + delta);
       if (next === 0) { delete cart[id]; } else { cart[id] = next; }
+      saveCart(cart);
       render();
     }
 
@@ -408,8 +409,7 @@
     }
 
     document.getElementById('goCheckout').addEventListener('click', () => {
-      const encoded = encodeCart(cart);
-      window.location.href = `thanh-toan.html?cart=${encoded}`;
+      window.location.href = 'thanh-toan.html';
     });
 
     render();
