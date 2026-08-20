@@ -1290,11 +1290,22 @@
     const WINDOW_START = 8, WINDOW_END = 12;
 
     function fmt(n) { return Math.round(n).toLocaleString('vi-VN') + 'đ'; }
-    function encodeCart(cart) { try { return encodeURIComponent(btoa(unescape(encodeURIComponent(JSON.stringify(cart))))); } catch (e) { return ''; } }
-    function decodeCart(str) { try { return JSON.parse(decodeURIComponent(escape(atob(decodeURIComponent(str))))); } catch (e) { return {}; } }
 
-    const params = new URLSearchParams(window.location.search);
-    let cart = params.get('cart') ? (decodeCart(params.get('cart')) || {}) : {};
+    // ----- Lưu giỏ hàng vào localStorage để dùng chung giữa các trang -----
+    const CART_KEY = 'bepnha_cart';
+
+    function loadCart() {
+      try {
+        const raw = localStorage.getItem(CART_KEY);
+        return raw ? (JSON.parse(raw) || {}) : {};
+      } catch (e) { return {}; }
+    }
+    function saveCart(cart) {
+      try { localStorage.setItem(CART_KEY, JSON.stringify(cart)); }
+      catch (e) { /* localStorage không khả dụng (vd: chế độ ẩn danh hết dung lượng) */ }
+    }
+
+    let cart = loadCart();
 
     let couponApplied = false;
     let simUsageRemaining = 13;
@@ -1304,7 +1315,7 @@
     simTime.setHours(8, 0, 0, 0);
 
     document.getElementById('backLink').addEventListener('click', () => {
-      window.location.href = `index.html?cart=${encodeCart(cart)}`;
+      window.location.href = 'index.html';
     });
 
     function getSimulatedTime() {
@@ -1353,7 +1364,7 @@
       const addMore = document.createElement('div');
       addMore.className = 'add-more';
       addMore.textContent = '+ Thêm món khác';
-      addMore.onclick = () => { window.location.href = `index.html?cart=${encodeCart(cart)}`; };
+      addMore.onclick = () => { window.location.href = 'index.html'; };
       wrap.appendChild(addMore);
     }
 
@@ -1361,6 +1372,7 @@
       const cur = cart[id] || 0;
       const next = Math.max(0, cur + delta);
       if (next === 0) delete cart[id]; else cart[id] = next;
+      saveCart(cart);
       evaluateCouponAfterCartChange();
       renderAll();
     }
@@ -1705,6 +1717,7 @@
     document.getElementById('overlayClose').addEventListener('click', () => {
       document.getElementById('overlay').classList.remove('show');
       cart = {};
+      saveCart(cart);
       couponApplied = false;
       hideTopBanner();
       renderAll();
