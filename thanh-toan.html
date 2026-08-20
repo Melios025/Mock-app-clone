@@ -1,0 +1,1723 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Thanh toán — Giả lập Grab</title>
+  <style>
+    :root {
+      --green: #00b14f;
+      --green-dark: #00913f;
+      --green-light: #e6f9ee;
+      --ink: #1a1a1a;
+      --gray: #6b7280;
+      --gray-light: #9ca3af;
+      --line: #eceef0;
+      --bg: #f5f6f7;
+      --red: #e11d48;
+      --red-light: #fdecec;
+      --amber: #8a5a00;
+      --amber-bg: #fff6d9;
+      --amber-border: #f5d97a;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      background: #fff;
+      color: var(--ink);
+      padding-bottom: 120px;
+    }
+
+    /* ===== Header (giống thanh trắng của Grab: back + tên quán + khoảng cách) ===== */
+    header {
+      background: #fff;
+      padding: 14px 16px 12px;
+      display: flex;
+      align-items: flex-start;
+      gap: 14px;
+    }
+
+    .backbtn {
+      font-size: 22px;
+      text-decoration: none;
+      color: var(--ink);
+      line-height: 1;
+      padding-top: 2px;
+      background: none;
+      border: none;
+      cursor: pointer;
+    }
+
+    .htitle-wrap {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .htitle {
+      font-size: 18px;
+      font-weight: 700;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .hsub {
+      font-size: 13px;
+      color: var(--gray);
+      margin-top: 3px;
+    }
+
+    /* ===== Banner cảnh báo/thành công dạng popup nhỏ, đi theo khi scroll ===== */
+    .topbanner {
+      display: none;
+      align-items: center;
+      gap: 10px;
+      position: fixed;
+      top: 10px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: calc(100% - 32px);
+      max-width: 480px;
+      z-index: 500;
+      padding: 12px 14px;
+      border-radius: 14px;
+      background: var(--amber-bg);
+      border: 1px solid var(--amber-border);
+      box-shadow: 0 8px 22px rgba(22, 27, 32, .08);
+      cursor: pointer;
+    }
+
+    .topbanner.show {
+      display: flex;
+    }
+
+    .topbanner.success {
+      background: linear-gradient(180deg, #f3fff7, #e6f9ee);
+      border-color: #bfe9d3;
+      box-shadow: 0 10px 24px rgba(0, 177, 79, .12);
+    }
+
+    .topbanner .msg {
+      flex: 1;
+      font-size: 13px;
+      line-height: 1.45;
+      color: var(--amber);
+      font-weight: 600;
+      white-space: pre-line;
+      letter-spacing: 0.01em;
+    }
+
+    .topbanner.success .msg {
+      color: var(--green-dark);
+    }
+
+    .topbanner .icon {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 28px;
+      height: 28px;
+      min-width: 28px;
+      border-radius: 50%;
+      font-size: 18px;
+      background: rgba(255, 255, 255, 0.45);
+    }
+
+    .topbanner.success .icon {
+      background: rgba(0, 177, 79, 0.12);
+    }
+
+    .wrap {
+      padding: 0 16px;
+    }
+
+    .section {
+      padding: 16px 0;
+    }
+
+    .section+.section {
+      border-top: 8px solid var(--bg);
+      margin-left: -16px;
+      margin-right: -16px;
+      padding-left: 16px;
+      padding-right: 16px;
+    }
+
+    /* ===== Danh sách sản phẩm ===== */
+    .line-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 10px 0;
+    }
+
+    .li-img {
+      width: 60px;
+      height: 60px;
+      min-width: 60px;
+      border-radius: 10px;
+      background: linear-gradient(135deg, #fff4e8, #ffe4d6);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 26px;
+      overflow: hidden;
+    }
+
+    .li-info {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .li-name {
+      font-size: 14.5px;
+      font-weight: 600;
+      line-height: 1.35;
+    }
+
+    .li-badge {
+      display: inline-block;
+      font-size: 10px;
+      font-weight: 700;
+      color: var(--green-dark);
+      background: var(--green-light);
+      padding: 1px 6px;
+      border-radius: 5px;
+      margin-top: 4px;
+    }
+
+    .li-price {
+      font-size: 14px;
+      color: var(--ink);
+      margin-top: 4px;
+      font-weight: 600;
+    }
+
+    .li-ctrl {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .li-ctrl button {
+      width: 26px;
+      height: 26px;
+      border-radius: 50%;
+      border: 1.5px solid var(--line);
+      background: #fff;
+      font-size: 15px;
+      cursor: pointer;
+      color: var(--ink);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .li-qty {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      border: 1.5px solid var(--green);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 13.5px;
+      font-weight: 800;
+      color: var(--green-dark);
+    }
+
+    .add-more {
+      margin-top: 6px;
+      text-align: center;
+      font-size: 13.5px;
+      font-weight: 700;
+      color: var(--green-dark);
+      padding: 12px;
+      cursor: pointer;
+    }
+
+    .empty {
+      text-align: center;
+      padding: 60px 24px;
+      color: var(--gray);
+    }
+
+    .empty .emoji {
+      font-size: 44px;
+      margin-bottom: 12px;
+    }
+
+    .empty a {
+      color: var(--green-dark);
+      font-weight: 700;
+      text-decoration: none;
+    }
+
+    /* ===== Banner Freeship (thuần trang trí — không có logic) ===== */
+    .freeship-banner {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      cursor: default;
+      background: linear-gradient(90deg, #fff1ec, #ffe3e0);
+      border-radius: 12px;
+      padding: 12px 14px;
+      margin-bottom: 6px;
+    }
+
+    .freeship-banner .icon {
+      font-size: 20px;
+    }
+
+    .freeship-banner .txt {
+      flex: 1;
+      font-size: 12.5px;
+      line-height: 1.45;
+      color: #7a2e1c;
+      font-weight: 500;
+    }
+
+    .freeship-banner .cta {
+      font-size: 12.5px;
+      font-weight: 800;
+      color: #1a56db;
+    }
+
+    /* ===== Ưu đãi ===== */
+    .promo-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      cursor: pointer;
+      padding: 4px 0;
+    }
+
+    .promo-icon {
+      width: 38px;
+      height: 38px;
+      min-width: 38px;
+      border-radius: 50%;
+      background: var(--green-light);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+    }
+
+    .promo-mid {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .promo-title {
+      font-size: 14.5px;
+      font-weight: 600;
+    }
+
+    .promo-sub {
+      font-size: 12.5px;
+      color: var(--gray);
+      margin-top: 2px;
+    }
+
+    .promo-sub.applied {
+      color: var(--green-dark);
+      font-weight: 700;
+    }
+
+    .promo-right {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .promo-amount {
+      font-size: 13.5px;
+      font-weight: 700;
+      color: var(--green-dark);
+    }
+
+    .promo-remove {
+      font-size: 17px;
+      color: var(--green-dark);
+      padding: 2px 4px;
+      cursor: default;
+      font-weight: 800;
+    }
+
+    .promo-chevron {
+      font-size: 16px;
+      color: var(--gray);
+    }
+
+    /* ===== Bảng chi phí ===== */
+    .bill-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 14px;
+      padding: 7px 0;
+      color: var(--ink);
+    }
+
+    .bill-row .lbl {
+      color: var(--gray);
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+
+    .bill-row .lbl .info-i {
+      width: 14px;
+      height: 14px;
+      border-radius: 50%;
+      border: 1px solid var(--gray-light);
+      color: var(--gray-light);
+      font-size: 10px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-style: normal;
+    }
+
+    .bill-row.discount .amt {
+      color: var(--green-dark);
+      font-weight: 700;
+    }
+
+    .bill-row.total {
+      border-top: 1px dashed var(--line);
+      margin-top: 6px;
+      padding-top: 14px;
+      font-size: 16.5px;
+      font-weight: 800;
+    }
+
+    /* ===== Các khối trang trí (không có logic thật) ===== */
+    .deco-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 6px 0;
+    }
+
+    .deco-toggle {
+      width: 40px;
+      height: 24px;
+      border-radius: 20px;
+      background: #d7dbe0;
+      min-width: 40px;
+      position: relative;
+      cursor: default;
+    }
+
+    .deco-toggle::after {
+      content: '';
+      position: absolute;
+      width: 19px;
+      height: 19px;
+      border-radius: 50%;
+      background: #fff;
+      top: 2.5px;
+      left: 2.5px;
+      box-shadow: 0 1px 2px rgba(0, 0, 0, .2);
+    }
+
+    .deco-title {
+      font-size: 14.5px;
+      font-weight: 700;
+    }
+
+    .deco-sub {
+      font-size: 12px;
+      color: var(--gray);
+      margin-top: 2px;
+      line-height: 1.4;
+    }
+
+    .deco-link {
+      font-size: 12.5px;
+      color: #1a56db;
+      font-weight: 600;
+      margin-top: 4px;
+      display: inline-block;
+    }
+
+    .deco-check {
+      width: 19px;
+      height: 19px;
+      border: 1.5px solid var(--gray-light);
+      border-radius: 5px;
+      min-width: 19px;
+      cursor: default;
+    }
+
+    .addr-row {
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      padding: 6px 0;
+    }
+
+    .addr-icon {
+      font-size: 18px;
+      margin-top: 2px;
+    }
+
+    .addr-mid {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .addr-title {
+      font-size: 14.5px;
+      font-weight: 700;
+    }
+
+    .addr-sub {
+      font-size: 12.5px;
+      color: var(--gray);
+      margin-top: 2px;
+    }
+
+    .addr-chevron {
+      color: var(--gray);
+      font-size: 16px;
+    }
+
+    .addr-edit {
+      font-size: 12.5px;
+      color: #1a56db;
+      font-weight: 700;
+    }
+
+    .deliv-title {
+      font-size: 14.5px;
+      font-weight: 800;
+      margin-bottom: 10px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .deliv-opt {
+      border: 1.5px solid var(--line);
+      border-radius: 12px;
+      padding: 12px 14px;
+      margin-bottom: 8px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      cursor: default;
+    }
+
+    .deliv-opt.selected {
+      border-color: var(--green);
+      background: #f4fdf8;
+    }
+
+    .deliv-opt .name {
+      font-size: 13.5px;
+      font-weight: 700;
+    }
+
+    .deliv-opt .time {
+      color: var(--green-dark);
+      font-weight: 700;
+    }
+
+    .deliv-opt .desc {
+      font-size: 11.5px;
+      color: #1a56db;
+      margin-top: 3px;
+      font-weight: 600;
+    }
+
+    .deliv-opt .price {
+      font-size: 13.5px;
+      font-weight: 700;
+    }
+
+    .deliv-opt.placeholder {
+      color: var(--gray);
+      font-size: 13px;
+      justify-content: center;
+      border-style: dashed;
+    }
+
+    .pay-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 10px 0;
+      cursor: default;
+    }
+
+    .pay-row+.pay-row {
+      border-top: 1px solid var(--line);
+    }
+
+    .pay-icon {
+      width: 34px;
+      height: 34px;
+      min-width: 34px;
+      border-radius: 8px;
+      background: var(--bg);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 16px;
+    }
+
+    .pay-name {
+      flex: 1;
+      font-size: 14px;
+      font-weight: 600;
+    }
+
+    .pay-radio {
+      width: 19px;
+      height: 19px;
+      border-radius: 50%;
+      border: 1.5px solid var(--line);
+      min-width: 19px;
+      position: relative;
+    }
+
+    .pay-radio.selected {
+      border-color: var(--green);
+    }
+
+    .pay-radio.selected::after {
+      content: '';
+      position: absolute;
+      width: 11px;
+      height: 11px;
+      border-radius: 50%;
+      background: var(--green);
+      top: 2.5px;
+      left: 2.5px;
+    }
+
+    .deco-note {
+      display: none !important;
+    }
+
+    /* ===== Thanh dưới cùng ===== */
+    .placebar {
+      position: fixed;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: #fff;
+      border-top: 1px solid var(--line);
+      padding: 10px 16px 14px;
+      box-shadow: 0 -6px 20px rgba(0, 0, 0, .06);
+      z-index: 30;
+    }
+
+    .placebar-save {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 13px;
+      color: var(--gray);
+      margin: 0 2px 8px;
+    }
+
+    .placebar-save.hidden {
+      display: none;
+    }
+
+    .placebar-save .save-left {
+      color: var(--gray);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .placebar-save .save-left .emoji {
+      font-size: 13px;
+    }
+
+    .placebar-save .save-right {
+      color: #9aa0a6;
+      font-weight: 700;
+      opacity: 0.8;
+      text-decoration: line-through;
+      text-decoration-thickness: 2px;
+      text-decoration-color: #9aa0a6;
+    }
+
+    .placebar-total {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 2px 2px 10px;
+    }
+
+    .placebar-total .lbl {
+      font-size: 13.5px;
+      color: var(--gray);
+      font-weight: 600;
+    }
+
+    .placebar-total .amt {
+      font-size: 18px;
+      font-weight: 800;
+    }
+
+    .placebtn {
+      width: 100%;
+      background: var(--green);
+      color: #fff;
+      border: none;
+      border-radius: 12px;
+      padding: 14px;
+      font-size: 15.5px;
+      font-weight: 700;
+      cursor: pointer;
+      text-align: center;
+    }
+
+    .placebtn:disabled {
+      opacity: .45;
+      cursor: default;
+    }
+
+    /* ===== Modal chọn mã ===== */
+    .modal {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, .45);
+      z-index: 300;
+      display: none;
+      align-items: flex-end;
+      justify-content: center;
+    }
+
+    .modal.show {
+      display: flex;
+    }
+
+    .modal-sheet {
+      background: #fff;
+      width: 100%;
+      max-width: 480px;
+      border-radius: 18px 18px 0 0;
+      padding: 18px 16px 20px;
+      max-height: 80vh;
+      overflow-y: auto;
+      position: relative;
+      z-index: 350;
+    }
+
+    .modal-title {
+      font-size: 16px;
+      font-weight: 800;
+      margin-bottom: 14px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .modal-close {
+      font-size: 20px;
+      color: var(--gray);
+      cursor: pointer;
+    }
+
+    .coupon-manual {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 16px;
+    }
+
+    .coupon-manual input {
+      flex: 1;
+      border: 1.5px solid var(--line);
+      border-radius: 10px;
+      padding: 11px 12px;
+      font-size: 13.5px;
+      text-transform: uppercase;
+    }
+
+    .coupon-manual button {
+      background: var(--green);
+      color: #fff;
+      border: none;
+      border-radius: 10px;
+      padding: 0 16px;
+      font-size: 13.5px;
+      font-weight: 800;
+      cursor: pointer;
+    }
+
+    .coupon-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px 0;
+      border-top: 1px solid var(--line);
+      cursor: pointer;
+    }
+
+    .coupon-item:first-child {
+      border-top: none;
+    }
+
+    .coupon-item:active {
+      background: rgba(49, 190, 104, 0.03);
+    }
+
+    .coupon-item .icon {
+      width: 42px;
+      height: 42px;
+      border-radius: 10px;
+      background: #eafaf0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 22px;
+      flex-shrink: 0;
+    }
+
+    .coupon-item .details {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .coupon-item .code {
+      font-size: 15px;
+      font-weight: 800;
+      color: var(--ink);
+      line-height: 1.3;
+    }
+
+    .coupon-item .desc {
+      font-size: 12.5px;
+      color: var(--gray);
+      margin-top: 4px;
+      line-height: 1.5;
+    }
+
+    .coupon-check {
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      border: 2px solid var(--line);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+      font-weight: 800;
+      color: transparent;
+      flex-shrink: 0;
+    }
+
+    .coupon-item.selected .coupon-check {
+      border-color: var(--green);
+      background: var(--green);
+      color: #fff;
+    }
+
+    .coupon-choice-list {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      margin-bottom: 12px;
+    }
+
+    .coupon-choice {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      min-height: 46px;
+      padding: 10px 12px;
+      border: 1.5px solid var(--line);
+      border-radius: 12px;
+      background: #fff;
+      cursor: pointer;
+    }
+
+    .coupon-choice input {
+      accent-color: var(--green);
+      width: 18px;
+      height: 18px;
+      margin: 0;
+    }
+
+    .coupon-choice span {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--ink);
+    }
+
+    .coupon-apply-bar {
+      width: 100%;
+      background: var(--green);
+      color: #fff;
+      border: none;
+      border-radius: 12px;
+      padding: 15px 16px;
+      font-size: 16px;
+      font-weight: 800;
+      cursor: pointer;
+      margin-top: 16px;
+    }
+
+    /* ===== Bảng điều khiển QA ===== */
+    .qa-card {
+      border: 1.5px dashed #f0b74a;
+      background: #fffdf7;
+      border-radius: 14px;
+      margin: 16px 0;
+      overflow: hidden;
+    }
+
+    .qa-head {
+      padding: 12px 14px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      cursor: pointer;
+      background: var(--amber-bg);
+      list-style: none;
+    }
+
+    .qa-head b {
+      font-size: 13px;
+      color: var(--amber);
+    }
+
+    .qa-body {
+      padding: 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    .qa-group-title {
+      font-size: 11px;
+      font-weight: 800;
+      color: var(--gray);
+      text-transform: uppercase;
+      letter-spacing: .4px;
+      margin-bottom: 8px;
+    }
+
+    .qa-opt {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 13px;
+      padding: 4px 0;
+    }
+
+    .qa-opt input {
+      width: 16px;
+      height: 16px;
+    }
+
+    .qa-input-label {
+      font-size: 11px;
+      font-weight: 800;
+      color: var(--gray);
+      text-transform: uppercase;
+      letter-spacing: .3px;
+      margin-bottom: 4px;
+    }
+
+    .qa-input {
+      width: 100%;
+      padding: 8px 10px;
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      font-size: 12.5px;
+    }
+
+    .qa-info-box {
+      background: var(--bg);
+      border-radius: 10px;
+      padding: 12px;
+      border-left: 3px solid var(--green);
+    }
+
+    .qa-info-row {
+      font-size: 12px;
+      margin-bottom: 6px;
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+    }
+
+    .qa-info-row:last-child {
+      margin-bottom: 0;
+    }
+
+    .qa-info-row b {
+      color: var(--ink);
+      text-align: right;
+    }
+
+    .qa-reset {
+      text-align: center;
+      font-size: 12.5px;
+      font-weight: 700;
+      color: var(--red);
+      border: 1px solid var(--red-light);
+      border-radius: 8px;
+      padding: 9px;
+      cursor: pointer;
+    }
+
+    .overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, .45);
+      display: none;
+      align-items: flex-end;
+      justify-content: center;
+      z-index: 200;
+    }
+
+    .overlay.show {
+      display: flex;
+    }
+
+    .sheet {
+      background: #fff;
+      width: 100%;
+      max-width: 480px;
+      border-radius: 20px 20px 0 0;
+      padding: 28px 22px 22px;
+      text-align: center;
+    }
+
+    .sheet .emoji {
+      font-size: 46px;
+      margin-bottom: 8px;
+    }
+
+    .sheet h3 {
+      font-size: 17px;
+      margin-bottom: 6px;
+    }
+
+    .sheet p {
+      font-size: 13px;
+      color: var(--gray);
+      margin-bottom: 16px;
+      line-height: 1.5;
+    }
+
+    .sheet .amount {
+      font-size: 22px;
+      font-weight: 800;
+      margin-bottom: 18px;
+    }
+
+    .sheet button {
+      width: 100%;
+      background: var(--green);
+      color: #fff;
+      border: none;
+      border-radius: 12px;
+      padding: 13px;
+      font-size: 14.5px;
+      font-weight: 800;
+      cursor: pointer;
+    }
+  </style>
+</head>
+
+<body>
+
+  <header>
+    <button class="backbtn" id="backLink">←</button>
+    <div class="htitle-wrap">
+      <div class="htitle">Bếp Nhà — Quán Giả Lập</div>
+      <div class="hsub">📍 Cách bạn: 1.2 km</div>
+    </div>
+  </header>
+
+  <div class="topbanner" id="topBanner">
+    <div class="msg" id="topBannerMsg"></div>
+    <div class="icon" id="topBannerIcon">⚠️</div>
+  </div>
+
+  <div class="wrap">
+
+    <div class="section" id="itemsSection">
+      <div id="lineItems"></div>
+    </div>
+
+    <div class="section" id="freeshipSection">
+      <div class="freeship-banner">
+        <div class="icon">🚀</div>
+        <div class="txt">Freeship với GrabUnlimited! Áp dụng cùng các ưu đãi khác.</div>
+        <div class="cta">Thêm</div>
+      </div>
+    </div>
+
+    <div class="section" id="promoSection">
+      <div class="promo-row" id="promoRow"></div>
+    </div>
+
+    <div class="section" id="billSection">
+      <div id="billArea"></div>
+    </div>
+
+    <div class="section">
+      <div class="deco-row">
+        <div style="flex:1;">
+          <div class="deco-title">Thân thiện với môi trường</div>
+          <div class="deco-sub">Chương trình Vững‑Xanh · 1.000đ — khoản đóng góp giúp giảm khí thải các-bon mỗi chuyến
+            xe.</div>
+          <a class="deco-link">Xem tác động từ khoản đóng góp của bạn</a>
+        </div>
+        <div class="deco-toggle"></div>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="deco-row">
+        <div class="deco-check"></div>
+        <div style="flex:1;">
+          <div class="deco-title" style="font-size:14px;">Dụng cụ ăn uống</div>
+          <div class="deco-sub">Chỉ yêu cầu khi thật sự cần.</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="addr-row">
+        <div class="addr-icon">📍</div>
+        <div class="addr-mid">
+          <div class="addr-title">123 Đường Test</div>
+          <div class="addr-sub">Phường Thanh Khê, Đà Nẵng</div>
+        </div>
+        <div class="addr-chevron">›</div>
+      </div>
+      <div class="addr-row" style="padding-top:0;">
+        <div class="addr-icon">📝</div>
+        <div class="addr-mid">
+          <div class="addr-title" style="font-size:13.5px;">Đứng trước cổng nhà</div>
+        </div>
+        <div class="addr-edit">Chỉnh sửa</div>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="deliv-title">📦 Tuỳ chọn giao hàng</div>
+      <div class="deliv-opt" data-delivery="priority">
+        <div>
+          <div class="name">Ưu tiên ⚡ · 19 phút</div>
+          <div class="desc">Cam kết giao hàng đúng hẹn</div>
+        </div>
+        <div class="price" id="deliveryPriorityPrice">25.000đ</div>
+      </div>
+      <div class="deliv-opt selected" data-delivery="normal">
+        <div>
+          <div class="name">Nhanh · 22 phút</div>
+        </div>
+        <div class="price" id="deliveryNormalPrice">13.000đ</div>
+      </div>
+      <div class="deliv-opt" data-delivery="saving">
+        <div>
+          <div class="name">Tiết kiệm · 37 phút</div>
+        </div>
+        <div class="price" id="deliverySavingPrice">23.000đ</div>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="deliv-title" style="margin-bottom:6px;">Thông tin thanh toán</div>
+      <div class="pay-row">
+        <div class="pay-icon">💳</div>
+        <div class="pay-name">Thẻ</div>
+        <div class="pay-radio"></div>
+      </div>
+      <div class="pay-row">
+        <div class="pay-icon">💵</div>
+        <div class="pay-name">Tiền mặt</div>
+        <div class="pay-radio selected"></div>
+      </div>
+    </div>
+
+    <details class="qa-card" id="qaCard" open>
+      <summary class="qa-head">
+        <b>🧪 Bảng điều khiển QA (giả lập tình huống test)</b>
+        <span style="font-size:11px;color:var(--gray);">bấm để thu gọn</span>
+      </summary>
+      <div class="qa-body">
+
+        <div>
+          <div class="qa-group-title">Giờ hệ thống (khung hiệu lực 08:00–12:00)</div>
+          <label style="display:flex; align-items:center; gap:8px; margin-bottom:8px; font-size:13px;">
+            <input type="checkbox" id="qaTimeManual"> Dùng giờ giả lập thay vì giờ thật của máy
+          </label>
+          <label style="display:flex; align-items:center; gap:8px; margin-bottom:8px; font-size:13px;">
+            <input type="checkbox" id="qaTimeRunning"> Giờ giả lập tự chạy 
+          </label>
+          <div style="display:flex; gap:8px;">
+            <div style="flex:1;">
+              <div class="qa-input-label">Giờ</div>
+              <input type="number" id="qaHourInput" class="qa-input" min="0" max="23" value="8">
+            </div>
+            <div style="flex:1;">
+              <div class="qa-input-label">Phút</div>
+              <input type="number" id="qaMinInput" class="qa-input" min="0" max="59" value="0">
+            </div>
+            <div style="flex:1;">
+              <div class="qa-input-label">Giây</div>
+              <input type="number" id="qaSecInput" class="qa-input" min="0" max="59" value="0">
+            </div>
+          </div>
+          <div style="margin-top:8px; font-size:11px; color:var(--gray);">Giờ đang dùng: <b
+              id="qaCurrentTime">--:--:--</b></div>
+        </div>
+
+        <div>
+          <div class="qa-input-label" style="margin-bottom:6px;">Lượt sử dụng còn lại trên hệ thống (0–100)</div>
+          <input type="number" id="qaUsageInput" class="qa-input" min="0" max="100" value="13">
+
+        </div>
+
+        <div>
+          <div class="qa-input-label" style="margin-bottom:6px;">Phí giao hàng (đ)</div>
+          <input type="number" id="qaShipFeeInput" class="qa-input" min="0" step="1000" value="15000">
+
+        </div>
+
+        <div>
+          <div class="qa-group-title">Trạng thái người dùng &amp; sự cố</div>
+          <label class="qa-opt"><input type="checkbox" id="qaUserUsed"> Ép user này đã dùng mã trước đó</label>
+          <label class="qa-opt"><input type="checkbox" id="qaDisconnect"> Giả lập mất kết nối khi bấm "Áp dụng"</label>
+        </div>
+
+        <div class="qa-info-box" id="qaCouponInfo">
+          <div style="font-size:12px; font-weight:700; color:var(--green-dark); margin-bottom:8px;">📋 Thông tin mã
+            GIAM20</div>
+          <div class="qa-info-row"><span>Lượt sử dụng còn lại:</span><b id="qaInfoUsage">13 / 100</b></div>
+          <div class="qa-info-row"><span>Áp dụng cho:</span><b>Tất cả sản phẩm trong giỏ</b></div>
+          <div class="qa-info-row"><span>Mức giảm:</span><b>20% trên TỔNG cuối cùng trước giảm (sản phẩm + VAT + phí
+              giao hàng), tối đa 100.000đ</b></div>
+          <div class="qa-info-row"><span>Đơn tối thiểu:</span><b>200.000đ (tính trên TỔNG trước giảm, gồm cả VAT + phí
+              giao hàng)</b></div>
+          <div class="qa-info-row"><span>VAT:</span><b>8% trên giá trị sản phẩm (subtotal)</b></div>
+          <div class="qa-info-row"><span>Khung giờ hiệu lực:</span><b id="qaInfoWindow">08:00–12:00</b></div>
+        </div>
+
+        <div class="qa-reset" id="qaReset">↺ Đặt lại toàn bộ trạng thái test</div>
+      </div>
+    </details>
+
+  </div>
+
+  <div class="placebar">
+    <div class="placebar-save hidden" id="placebarSave">
+      <div class="save-left">
+        <span>Bạn tiết kiệm được</span>
+        <span id="placebarDiscountText">0đ</span>
+        <span class="emoji">✨</span>
+      </div>
+      <div class="save-right" id="placebarOriginalTotal">0đ</div>
+    </div>
+    <div class="placebar-total">
+      <div class="lbl">Tổng cộng</div>
+      <div class="amt" id="placeTotal">0đ</div>
+    </div>
+    <button class="placebtn" id="placeBtn">
+      <span id="placeLabel">Đặt đơn</span>
+    </button>
+  </div>
+
+  <div class="modal" id="couponModal">
+    <div class="modal-sheet">
+      <div class="modal-title">
+        <span>Ưu đãi của bạn</span>
+        <span class="modal-close" id="couponModalClose">✕</span>
+      </div>
+      <div class="coupon-manual">
+        <input id="couponInput" placeholder="Nhập mã ưu đãi" maxlength="20">
+      </div>
+      <div id="couponList"></div>
+      <button class="coupon-apply-bar" id="applyBtn">Áp dụng</button>
+    </div>
+  </div>
+
+  <div class="overlay" id="overlay">
+    <div class="sheet">
+      <div class="emoji">✅</div>
+      <h3>Đặt đơn thành công!</h3>
+      <p id="overlayDesc">Đơn hàng của bạn đang được chuẩn bị.</p>
+      <div class="amount" id="overlayAmount">0đ</div>
+      <button id="overlayClose">Xong</button>
+    </div>
+  </div>
+
+  <script>
+    const PRODUCTS = [
+      { id: 'p1', name: 'Cơm gà xối mỡ', price: 45000, emoji: '🍗' },
+      { id: 'p2', name: 'Bún bò Huế', price: 55000, emoji: '🍜' },
+      { id: 'p3', name: 'Phở bò tái', price: 50000, emoji: '🍲' },
+      { id: 'p4', name: 'Bánh mì thịt nướng', price: 25000, emoji: '🥖' },
+      { id: 'p5', name: 'Trà sữa trân châu', price: 35000, emoji: '🧋' },
+      { id: 'p6', name: 'Gỏi cuốn tôm thịt', price: 40000, emoji: '🥗' },
+      { id: 'p7', name: 'Cơm tấm sườn bì chả', price: 48000, emoji: '🍛' },
+      { id: 'p8', name: 'Chè khúc bạch', price: 30000, emoji: '🍧' },
+      { id: 'p9', name: 'Nước cam ép', price: 28000, emoji: '🍊' },
+      { id: 'p10', name: 'Bánh flan', price: 18000, emoji: '🍮' },
+    ];
+    // Spec (đã cập nhật): Coupon áp dụng cho TẤT CẢ sản phẩm trong giỏ, không giới hạn riêng 1 sản phẩm.
+    // Mức giảm 20% được tính trên TỔNG CUỐI CÙNG trước khi giảm (sản phẩm + VAT + phí giao hàng).
+    const MIN_ORDER = 200000;       // tính trên preDiscountTotal (subtotal + VAT + shipFee)
+    const DISCOUNT_PCT = 0.2;       // tính trên preDiscountTotal
+    const MAX_DISCOUNT = 100000;
+    const VAT_RATE = 0.08;          // tính trên subtotal (giá trị sản phẩm) — theo xác nhận của user
+    const DEFAULT_SHIP_FEE = 15000;
+    const USAGE_LIMIT = 100;
+    const COUPON_CODE = 'GIAM20';
+    const COUPON_LABEL = 'Giảm 20%';
+    const WINDOW_START = 8, WINDOW_END = 12;
+
+    function fmt(n) { return Math.round(n).toLocaleString('vi-VN') + 'đ'; }
+    function encodeCart(cart) { try { return encodeURIComponent(btoa(unescape(encodeURIComponent(JSON.stringify(cart))))); } catch (e) { return ''; } }
+    function decodeCart(str) { try { return JSON.parse(decodeURIComponent(escape(atob(decodeURIComponent(str))))); } catch (e) { return {}; } }
+
+    const params = new URLSearchParams(window.location.search);
+    let cart = params.get('cart') ? (decodeCart(params.get('cart')) || {}) : {};
+
+    let couponApplied = false;
+    let simUsageRemaining = 13;
+    let simUserUsed = false;
+    let shipFee = DEFAULT_SHIP_FEE;
+    let simTime = new Date();
+    simTime.setHours(8, 0, 0, 0);
+
+    document.getElementById('backLink').addEventListener('click', () => {
+      window.location.href = `mon-an.html?cart=${encodeCart(cart)}`;
+    });
+
+    function getSimulatedTime() {
+      if (!document.getElementById('qaTimeManual').checked) return new Date();
+      return simTime;
+    }
+    function isWithinWindow() {
+      const h = getSimulatedTime().getHours();
+      return h >= WINDOW_START && h < WINDOW_END;
+    }
+
+    function renderLineItems() {
+      const wrap = document.getElementById('lineItems');
+      const ids = Object.keys(cart).filter(id => cart[id] > 0);
+      const sectionsToToggle = ['freeshipSection', 'promoSection', 'billSection'];
+
+      if (ids.length === 0) {
+        sectionsToToggle.forEach(s => document.getElementById(s).style.display = 'none');
+        document.getElementById('placeBtn').disabled = true;
+        wrap.innerHTML = `<div class="empty"><div class="emoji">🛒</div><div>Giỏ hàng đang trống.<br><a href="mon-an.html">Quay lại chọn món →</a></div></div>`;
+        return;
+      }
+      sectionsToToggle.forEach(s => document.getElementById(s).style.display = '');
+      document.getElementById('placeBtn').disabled = false;
+
+      wrap.innerHTML = '';
+      ids.forEach(id => {
+        const p = PRODUCTS.find(x => x.id === id);
+        const qty = cart[id];
+        const row = document.createElement('div');
+        row.className = 'line-item';
+        row.innerHTML = `
+      <div class="li-img">${p.emoji}</div>
+      <div class="li-info">
+        <div class="li-name">${p.name}</div>
+        <div class="li-price">${fmt(p.price)}</div>
+      </div>
+      <div class="li-ctrl">
+        <button onclick="changeQty('${id}',-1)">−</button>
+        <div class="li-qty">${qty}</div>
+        <button onclick="changeQty('${id}',1)">+</button>
+      </div>
+    `;
+        wrap.appendChild(row);
+      });
+      const addMore = document.createElement('div');
+      addMore.className = 'add-more';
+      addMore.textContent = '+ Thêm món khác';
+      addMore.onclick = () => { window.location.href = `mon-an.html?cart=${encodeCart(cart)}`; };
+      wrap.appendChild(addMore);
+    }
+
+    function changeQty(id, delta) {
+      const cur = cart[id] || 0;
+      const next = Math.max(0, cur + delta);
+      if (next === 0) delete cart[id]; else cart[id] = next;
+      evaluateCouponAfterCartChange();
+      renderAll();
+    }
+
+    function getSubtotal() {
+      return Object.keys(cart).reduce((sum, id) => {
+        const p = PRODUCTS.find(x => x.id === id);
+        return p ? sum + p.price * cart[id] : sum;
+      }, 0);
+    }
+    function getVat() { return getSubtotal() * VAT_RATE; }
+    function getShip() { return getSubtotal() > 0 ? shipFee : 0; }
+    function getPreDiscountTotal() { return getSubtotal() + getVat() + getShip(); }
+
+    // Điều kiện kích hoạt: phải có sản phẩm được quy định trong giỏ VÀ tổng trước giảm >= 200.000đ.
+    // Mức giảm: 20% trên TỔNG trước giảm (sản phẩm + VAT + phí giao hàng), tối đa 100.000đ.
+    function getDiscount() {
+      if (!couponApplied) return 0;
+      const preTotal = getPreDiscountTotal();
+      if (preTotal < MIN_ORDER) return 0;
+      return Math.min(preTotal * DISCOUNT_PCT, MAX_DISCOUNT);
+    }
+
+    function evaluateCouponAfterCartChange() {
+      if (!couponApplied) return;
+      if (getPreDiscountTotal() < MIN_ORDER) {
+        couponApplied = false;
+        showTopBanner('warn', `⚠️ Mã ưu đãi đã được huỷ tự động vì tổng đơn hàng (gồm VAT + phí giao hàng) không còn đạt tối thiểu ${fmt(MIN_ORDER)}.`);
+      }
+    }
+
+    let toastTimer = null;
+
+    function showTopBanner(type, msg, duration = 3000) {
+      const b = document.getElementById('topBanner');
+      const iconEl = document.getElementById('topBannerIcon');
+      document.getElementById('topBannerMsg').textContent = msg;
+      b.classList.remove('success');
+      if (type === 'success') { b.classList.add('success'); iconEl.textContent = '✓'; }
+      else { iconEl.textContent = '⚠️'; }
+      b.classList.add('show');
+
+      clearTimeout(toastTimer);
+      toastTimer = setTimeout(() => {
+        b.classList.remove('show');
+      }, duration);
+    }
+    function hideTopBanner() {
+      clearTimeout(toastTimer);
+      document.getElementById('topBanner').classList.remove('show');
+    }
+    document.getElementById('topBanner').addEventListener('click', openCouponModal);
+
+    function renderPromoRow() {
+      const row = document.getElementById('promoRow');
+      if (couponApplied) {
+        row.innerHTML = `
+      <div class="promo-icon">🏷️</div>
+      <div class="promo-mid">
+        <div class="promo-title">Ưu đãi</div>
+        <div class="promo-sub applied">Đã áp dụng ưu đãi</div>
+      </div>
+      <div class="promo-right">
+        <div class="promo-remove" id="removeCoupon">✓</div>
+      </div>
+    `;
+        row.onclick = openCouponModal;
+      } else {
+        row.innerHTML = `
+      <div class="promo-icon">🏷️</div>
+      <div class="promo-mid">
+        <div class="promo-title">Ưu đãi</div>
+        <div class="promo-sub">Chọn hoặc nhập mã ưu đãi</div>
+      </div>
+      <div class="promo-right"><div class="promo-chevron">›</div></div>
+    `;
+        row.onclick = openCouponModal;
+      }
+    }
+
+    function openCouponModal() {
+      const selectedCode = couponApplied ? COUPON_CODE : '';
+      document.getElementById('couponInput').value = selectedCode;
+      document.getElementById('couponList').innerHTML = `
+    <div class="coupon-item ${selectedCode === COUPON_CODE ? 'selected' : ''}" data-code="${COUPON_CODE}">
+      <div class="icon">🎟️</div>
+      <div class="details">
+        <div class="code">${COUPON_CODE} · ${COUPON_LABEL}</div>
+        <div class="desc">Giảm 20% trên tổng đơn (sản phẩm + VAT + phí giao hàng), tối đa 100.000đ · Áp dụng cho mọi sản phẩm trong giỏ · Đơn tối thiểu 200.000đ · Hiệu lực 08:00–12:00 hằng ngày</div>
+      </div>
+      <div class="coupon-check">✓</div>
+    </div>
+  `;
+      document.querySelectorAll('.coupon-item').forEach(item => {
+        item.addEventListener('click', () => {
+          const isSelected = item.classList.contains('selected');
+          document.querySelectorAll('.coupon-item').forEach(el => el.classList.toggle('selected', el === item && !isSelected));
+          document.getElementById('couponInput').value = isSelected ? '' : item.dataset.code;
+        });
+      });
+      document.getElementById('couponModal').classList.add('show');
+    }
+    function closeCouponModal() {
+      document.getElementById('couponModal').classList.remove('show');
+    }
+    function selectCoupon(code) {
+      document.getElementById('couponInput').value = code;
+      applyCoupon();
+    }
+    document.getElementById('couponModalClose').onclick = closeCouponModal;
+    document.getElementById('couponModal').addEventListener('click', (e) => {
+      if (e.target.id === 'couponModal') closeCouponModal();
+    });
+    document.getElementById('applyBtn').onclick = () => {
+      const selected = document.querySelector('.coupon-item.selected');
+      if (!selected) {
+        couponApplied = false;
+        hideTopBanner();
+        renderAll();
+        closeCouponModal();
+        return;
+      }
+      document.getElementById('couponInput').value = selected.dataset.code;
+      applyCoupon();
+    };
+
+    function applyCoupon() {
+      const input = document.getElementById('couponInput');
+      const code = (input.value || '').trim().toUpperCase();
+
+      const qaDisconnect = document.getElementById('qaDisconnect').checked;
+      const qaUserUsed = document.getElementById('qaUserUsed').checked;
+
+      if (!code || code === 'NONE') {
+        couponApplied = false;
+        hideTopBanner();
+        renderAll();
+        closeCouponModal();
+        return;
+      }
+
+      if (code !== COUPON_CODE) {
+        showTopBanner('error', `Mã "${code || '(trống)'}" không tồn tại. Mã hợp lệ duy nhất hiện có: ${COUPON_CODE}.`);
+        return;
+      }
+      if (qaDisconnect) {
+        showTopBanner('error', '📡 Mất kết nối khi áp mã. Vui lòng thử lại. Hệ thống không ghi nhận mã này.');
+        return;
+      }
+      if (simUsageRemaining <= 0) {
+        showTopBanner('error', `Mã đã hết lượt sử dụng (0/${USAGE_LIMIT}).`);
+        return;
+      }
+      if (qaUserUsed || simUserUsed) {
+        showTopBanner('error', 'Bạn đã sử dụng mã này rồi. Mỗi tài khoản chỉ được dùng 1 lần.');
+        return;
+      }
+      if (!isWithinWindow()) {
+        showTopBanner('error', `Mã chỉ áp dụng trong khung giờ ${String(WINDOW_START).padStart(2, '0')}:00–${String(WINDOW_END).padStart(2, '0')}:00 hằng ngày.`);
+        return;
+      }
+      if (getPreDiscountTotal() < MIN_ORDER) {
+        showTopBanner('error', `Đơn hàng (gồm VAT + phí giao hàng) chưa đạt tối thiểu ${fmt(MIN_ORDER)}. Không thể áp dụng ưu đãi.`);
+        return;
+      }
+
+      couponApplied = true;
+      closeCouponModal();
+      renderAll();
+      showTopBanner('success', `${COUPON_CODE} · ${COUPON_LABEL}\n-${fmt(getDiscount())}\nĐã áp dụng ưu đãi thành công!`);
+    }
+
+    function getDeliveryPrices() {
+      const normalFee = shipFee >= 0 ? shipFee : 13000;
+      return {
+        priority: normalFee + 10000,
+        normal: normalFee,
+        saving: Math.max(0, normalFee - 10000),
+      };
+    }
+
+    function renderDeliveryOptions() {
+      const prices = getDeliveryPrices();
+      const normal = document.querySelector('[data-delivery="normal"]');
+      const priority = document.querySelector('[data-delivery="priority"]');
+      const saving = document.querySelector('[data-delivery="saving"]');
+
+      if (normal) {
+        normal.querySelector('.price').textContent = fmt(prices.normal);
+        normal.classList.add('selected');
+      }
+      if (priority) priority.querySelector('.price').textContent = fmt(prices.priority);
+      if (saving) saving.querySelector('.price').textContent = fmt(prices.saving);
+
+      document.querySelectorAll('.deliv-opt').forEach(opt => {
+        opt.classList.toggle('selected', opt === normal);
+      });
+    }
+
+    function renderBill() {
+      const area = document.getElementById('billArea');
+      const subtotal = getSubtotal();
+      const vat = getVat();
+      const ship = getShip();
+      const discount = getDiscount();
+      const preDiscountTotal = subtotal + vat + ship;
+      const total = preDiscountTotal - discount;
+
+      area.innerHTML = `
+    <div class="bill-row"><span class="lbl">Tổng tạm tính</span><span>${fmt(subtotal)}</span></div>
+    <div class="bill-row"><span class="lbl">VAT (8%)</span><span>${fmt(vat)}</span></div>
+    <div class="bill-row">
+      <span class="lbl">Phí giao hàng <i class="info-i">i</i></span>
+      <span>${fmt(ship)}</span>
+    </div>
+    ${discount > 0 ? `<div class="bill-row discount"><span class="lbl">Giảm giá (${COUPON_LABEL})</span><span class="amt">−${fmt(discount)}</span></div>` : ''}
+    <div class="bill-row total"><span>Tổng cộng</span><span>${fmt(total)}</span></div>
+  `;
+      const saveRow = document.getElementById('placebarSave');
+      const discountText = document.getElementById('placebarDiscountText');
+      const originalTotal = document.getElementById('placebarOriginalTotal');
+      if (discount > 0) {
+        saveRow.classList.remove('hidden');
+        discountText.textContent = fmt(discount);
+        originalTotal.textContent = fmt(preDiscountTotal);
+      } else {
+        saveRow.classList.add('hidden');
+      }
+      document.getElementById('placeTotal').textContent = fmt(total);
+      renderDeliveryOptions();
+    }
+
+    function updateQaStatus() {
+      const now = getSimulatedTime();
+      document.getElementById('qaCurrentTime').textContent =
+        `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}:${String(now.getSeconds()).padStart(2, '0')}`;
+      document.getElementById('qaInfoUsage').textContent = `${simUsageRemaining} / ${USAGE_LIMIT}`;
+      document.getElementById('qaInfoWindow').textContent =
+        `${WINDOW_START}:00–${WINDOW_END}:00 (${isWithinWindow() ? 'ĐANG HIỆU LỰC' : 'NGOÀI HIỆU LỰC'})`;
+    }
+
+    document.querySelectorAll('#qaTimeManual,#qaTimeRunning,#qaUserUsed,#qaDisconnect').forEach(cb => {
+      cb.addEventListener('change', () => {
+        if (cb.id === 'qaTimeRunning' && cb.checked) {
+          const h = parseInt(document.getElementById('qaHourInput').value || 8);
+          const m = parseInt(document.getElementById('qaMinInput').value || 0);
+          const s = parseInt(document.getElementById('qaSecInput').value || 0);
+          simTime.setHours(h, m, s, 0);
+        }
+        updateQaStatus();
+      });
+    });
+    document.querySelectorAll('#qaHourInput,#qaMinInput,#qaSecInput').forEach(inp => {
+      inp.addEventListener('change', () => {
+        const h = parseInt(document.getElementById('qaHourInput').value || 8);
+        const m = parseInt(document.getElementById('qaMinInput').value || 0);
+        const s = parseInt(document.getElementById('qaSecInput').value || 0);
+        simTime.setHours(h, m, s, 0);
+        updateQaStatus();
+      });
+    });
+    document.getElementById('qaUsageInput').addEventListener('change', (e) => {
+      simUsageRemaining = Math.max(0, Math.min(100, parseInt(e.target.value) || 0));
+      updateQaStatus();
+    });
+    document.getElementById('qaShipFeeInput').addEventListener('change', (e) => {
+      const value = parseInt(e.target.value, 10);
+      shipFee = Number.isNaN(value) ? 0 : value;
+      evaluateCouponAfterCartChange();
+      renderAll();
+    });
+    document.getElementById('qaReset').addEventListener('click', () => {
+      document.querySelectorAll('.qa-body input[type=checkbox]').forEach(cb => cb.checked = false);
+      document.getElementById('qaHourInput').value = 8;
+      document.getElementById('qaMinInput').value = 0;
+      document.getElementById('qaSecInput').value = 0;
+      document.getElementById('qaUsageInput').value = 13;
+      document.getElementById('qaShipFeeInput').value = DEFAULT_SHIP_FEE;
+      simTime = new Date(); simTime.setHours(8, 0, 0, 0);
+      simUsageRemaining = 13;
+      simUserUsed = false;
+      shipFee = DEFAULT_SHIP_FEE;
+      couponApplied = false;
+      hideTopBanner();
+      renderAll();
+    });
+    setInterval(() => {
+      if (document.getElementById('qaTimeManual').checked && document.getElementById('qaTimeRunning').checked) {
+        simTime.setSeconds(simTime.getSeconds() + 1);
+      }
+      updateQaStatus();
+    }, 1000);
+
+    document.getElementById('placeBtn').addEventListener('click', () => {
+      const btn = document.getElementById('placeBtn');
+      const label = document.getElementById('placeLabel');
+      if (btn.disabled) return;
+      btn.disabled = true;
+      label.textContent = 'Đang xử lý...';
+
+      setTimeout(() => {
+        // Mục 6 spec: mã còn hiệu lực lúc áp nhưng hết hạn TRƯỚC khi hoàn tất thanh toán -> chặn thanh toán kèm mã, tính lại giá gốc.
+        if (couponApplied && !isWithinWindow()) {
+          couponApplied = false;
+          renderAll();
+          showTopBanner('warn', '⚠️ Mã ưu đãi đã hết hạn trong lúc xử lý thanh toán (ngoài khung giờ 08:00–12:00). Đơn hàng đã được tính lại theo giá gốc — vui lòng bấm "Đặt đơn" lại để tiếp tục.');
+          btn.disabled = false;
+          label.textContent = 'Đặt đơn';
+          window.scrollTo({ top: 0, behavior: 'smooth' });
+          return;
+        }
+        // Mục 5 spec: nếu ngay lúc thanh toán mã đã hết lượt (người khác được ghi nhận trước) -> chặn, tính lại giá gốc.
+        if (couponApplied && simUsageRemaining <= 0) {
+          couponApplied = false;
+          renderAll();
+          showTopBanner('warn', '⚠️ Rất tiếc, một người dùng khác đã được hệ thống ghi nhận thanh toán trước và dùng hết lượt cuối cùng của mã. Đơn hàng đã được tính lại theo giá gốc — vui lòng bấm "Đặt đơn" lại để tiếp tục.');
+          btn.disabled = false;
+          label.textContent = 'Đặt đơn';
+          window.scrollTo({ top: 0, behavior: 'smooth' });
+          return;
+        }
+
+        const discount = getDiscount();
+        if (couponApplied) {
+          simUsageRemaining = Math.max(0, simUsageRemaining - 1);
+          simUserUsed = true;
+        }
+        const total = getSubtotal() + getVat() + getShip() - discount;
+        document.getElementById('overlayAmount').textContent = fmt(total);
+        document.getElementById('overlayDesc').textContent = discount > 0
+          ? `Bạn đã tiết kiệm ${fmt(discount)} với mã ${COUPON_LABEL}.`
+          : 'Đơn hàng không sử dụng mã ưu đãi.';
+        document.getElementById('overlay').classList.add('show');
+
+        btn.disabled = false;
+        label.textContent = 'Đặt đơn';
+        renderAll();
+        updateQaStatus();
+      }, 800);
+    });
+
+    document.getElementById('overlayClose').addEventListener('click', () => {
+      document.getElementById('overlay').classList.remove('show');
+      cart = {};
+      couponApplied = false;
+      hideTopBanner();
+      renderAll();
+    });
+
+    function renderAll() {
+      renderLineItems();
+      renderPromoRow();
+      renderBill();
+    }
+    renderAll();
+    updateQaStatus();
+  </script>
+</body>
+
+</html>
