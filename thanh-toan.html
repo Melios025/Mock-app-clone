@@ -1202,15 +1202,6 @@
           <label class="qa-opt"><input type="checkbox" id="qaUserUsed"> Ép user này đã dùng mã trước đó</label>
           <label class="qa-opt"><input type="checkbox" id="qaDisconnect"> Giả lập mất kết nối khi bấm "Áp dụng"</label>
         </div>
-
-        <div class="qa-info-box" id="qaCouponInfo">
-          <div style="font-size:12px; font-weight:700; color:var(--green-dark); margin-bottom:8px;">📋 Thông tin mã
-            GIAM20</div>
-          <div class="qa-info-row"><span>Lượt sử dụng còn lại:</span><b id="qaInfoUsage">13 / 100</b></div>
-<div style="margin-top:8px; font-size:11px; color:var(--gray);">Giờ đang dùng: <b
-              id="qaCurrentTime">--:--:--</b></div>          
-        </div>
-
         <div class="qa-reset" id="qaReset">↺ Đặt lại toàn bộ trạng thái test</div>
       </div>
     </details>
@@ -1604,7 +1595,6 @@
       const now = getSimulatedTime();
       document.getElementById('qaCurrentTime').textContent =
         `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}:${String(now.getSeconds()).padStart(2, '0')}`;
-      document.getElementById('qaInfoUsage').textContent = `${simUsageRemaining} / ${USAGE_LIMIT}`;
     }
 
     document.querySelectorAll('#qaTimeManual,#qaTimeRunning,#qaUserUsed,#qaDisconnect').forEach(cb => {
