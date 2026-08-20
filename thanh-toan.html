@@ -1304,7 +1304,7 @@
     simTime.setHours(8, 0, 0, 0);
 
     document.getElementById('backLink').addEventListener('click', () => {
-      window.location.href = `mon-an.html?cart=${encodeCart(cart)}`;
+      window.location.href = `index.html?cart=${encodeCart(cart)}`;
     });
 
     function getSimulatedTime() {
@@ -1324,7 +1324,7 @@
       if (ids.length === 0) {
         sectionsToToggle.forEach(s => document.getElementById(s).style.display = 'none');
         document.getElementById('placeBtn').disabled = true;
-        wrap.innerHTML = `<div class="empty"><div class="emoji">🛒</div><div>Giỏ hàng đang trống.<br><a href="mon-an.html">Quay lại chọn món →</a></div></div>`;
+        wrap.innerHTML = `<div class="empty"><div class="emoji">🛒</div><div>Giỏ hàng đang trống.<br><a href="index.html">Quay lại chọn món →</a></div></div>`;
         return;
       }
       sectionsToToggle.forEach(s => document.getElementById(s).style.display = '');
@@ -1353,7 +1353,7 @@
       const addMore = document.createElement('div');
       addMore.className = 'add-more';
       addMore.textContent = '+ Thêm món khác';
-      addMore.onclick = () => { window.location.href = `mon-an.html?cart=${encodeCart(cart)}`; };
+      addMore.onclick = () => { window.location.href = `index.html?cart=${encodeCart(cart)}`; };
       wrap.appendChild(addMore);
     }
 
